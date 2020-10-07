@@ -6,8 +6,12 @@ from Test2 import Video
 import tkinter as tk
 from PIL import Image, ImageTk
 
+
+# TO DO Использовать файл вместо списка
+
 # Функция обработки и показа
-def show_frame():
+def show_frame(names):
+    print(names)
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -37,7 +41,7 @@ def show_frame():
     imgtk = ImageTk.PhotoImage(image=img)
     lmain.imgtk = imgtk
     lmain.configure(image=imgtk)
-    lmain.after(10, show_frame)
+    lmain.after(10, show_frame(names))
 
 
 
@@ -46,7 +50,11 @@ def login():
     imageFrame.grid(row=0, column=0, padx=10, pady=2)
 
     # Capture video frames
-    global lmain, cap, faceCascade, rec, font, id, names
+    global lmain, cap, faceCascade, rec, font, id
+    names = []
+    with open('users.txt', 'r') as f:
+        names = f.read().splitlines()
+    print(names)
     lmain = tk.Label(imageFrame)
     lmain.grid(row=0, column=0)
     cap = cv2.VideoCapture(0)
@@ -57,12 +65,13 @@ def login():
     font = cv2.FONT_HERSHEY_SIMPLEX
     id = 0
 
-    names = ['None', 'Misha', 'Katya', 'Vlada', 'Sasha', 'Alexey']
+
+    #names = ['None', 'Misha', 'Katya', 'Vlada', 'Sasha', 'Alexey']
+
 
     sliderFrame = tk.Frame(window, width=600, height=100)
     sliderFrame.grid(row=600, column=0, padx=10, pady=2)
-
-    show_frame()
+    show_frame(names)
 
 def training():
     trainer = Trainer()
@@ -75,7 +84,9 @@ def training():
 
 
 def registration():
-    face_id = id_form.get()
+    face_id = id_form.get() # Name
+    print("face_id=",face_id)
+
     id_form.destroy()
     btn_form.destroy()
 
@@ -84,6 +95,15 @@ def registration():
     lbl_register.place(x=220, y=250)
     window.update()
     # Processing
+
+    #-----------------------------
+    lengthNames = []
+    with open('users.txt', 'a') as f:
+        f.write(face_id + '\n')
+        f.close()
+    with open('users.txt', 'r') as g:
+        lengthNames = g.read().splitlines()
+    #-----------------------------
 
     cam = cv2.VideoCapture(0)
     detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -95,7 +115,7 @@ def registration():
         for (x, y, w, h) in faces:
             cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
             count += 1
-            cv2.imwrite('face/user.' + str(face_id) + '.' + str(count) + '.jpg', gray[y:y + h, x:x + w])
+            cv2.imwrite('face/user.' + str(len(lengthNames)) + '.' + str(count) + '.jpg', gray[y:y + h, x:x + w])
         """cv2.imshow('image', img)
         k = cv2.waitKey(100) & 0xff
         if k == 50:
@@ -113,7 +133,6 @@ def registration():
     training()
 
 def signup():
-    print("signup")
     btn_login.destroy()
     btn_signup.destroy()
     global id_form, btn_form
@@ -131,6 +150,9 @@ if __name__ == '__main__':
     window.config(background="#FFFFFF")
 
     global btn_login, btn_signup
+    names = ["Unknown"]
+
+
     btn_login = tk.Button(window, text="LOGIN", command=login)
     btn_login.place(x=280, y=150)
 
