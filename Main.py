@@ -5,13 +5,14 @@ from Recognition import Recognizer
 from Test2 import Video
 import tkinter as tk
 from PIL import Image, ImageTk
+import os
+import shutil
 
-
-# TO DO Использовать файл вместо списка
 
 # Функция обработки и показа
-def show_frame(names):
-    print(names)
+def show_frame():
+    with open('users.txt', 'r') as f:
+        names = f.read().splitlines()
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -31,32 +32,29 @@ def show_frame(names):
             id = names[id]
             conf = "  {0}%".format(round(100 - conf))
         else:
-            id = "unknown person"
+            id = "Unknown"
             confidence = "  {0}%".format(round(100 - conf))
 
         cv2.putText(frame, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
         cv2.putText(frame, str(conf), (x + 5, y + h - 5), font, 1, (255, 255, 0), 2)
-        
     img = Image.fromarray(frame)
     imgtk = ImageTk.PhotoImage(image=img)
     lmain.imgtk = imgtk
     lmain.configure(image=imgtk)
-    lmain.after(10, show_frame(names))
+    lmain.after(10, show_frame)
 
 
 
 def login():
     imageFrame = tk.Frame(window, width=600, height=500)
-    imageFrame.grid(row=0, column=0, padx=10, pady=2)
-
+    imageFrame.place(x=0,y=0)
     # Capture video frames
     global lmain, cap, faceCascade, rec, font, id
     names = []
     with open('users.txt', 'r') as f:
         names = f.read().splitlines()
-    print(names)
     lmain = tk.Label(imageFrame)
-    lmain.grid(row=0, column=0)
+    lmain.place(x=0, y=0)
     cap = cv2.VideoCapture(0)
     rec = cv2.face.LBPHFaceRecognizer_create()
     rec.read('trainer/trainer.yml')
@@ -65,34 +63,34 @@ def login():
     font = cv2.FONT_HERSHEY_SIMPLEX
     id = 0
 
-
-    #names = ['None', 'Misha', 'Katya', 'Vlada', 'Sasha', 'Alexey']
-
-
-    sliderFrame = tk.Frame(window, width=600, height=100)
-    sliderFrame.grid(row=600, column=0, padx=10, pady=2)
-    show_frame(names)
+    show_frame()
 
 def training():
     trainer = Trainer()
     trainer.Train()
+
+    shutil.rmtree("face")
+    os.mkdir("face")
+
     lbl_registered.destroy()
     lbl_success = tk.Label(window, text="You`re succesfully registered!",
                            font=("Arial", 18), bg="white")
-    lbl_success.place(x=220, y=250)
+    lbl_success.place(x=132, y=170)
     window.update()
 
 
 def registration():
+
     face_id = id_form.get() # Name
     print("face_id=",face_id)
 
+    lbl_name.destroy()
     id_form.destroy()
     btn_form.destroy()
 
     lbl_register = tk.Label(window, text="Don`t move your head too much. \n We`re registering your face",
                             font=("Arial", 18), bg="white")
-    lbl_register.place(x=220, y=250)
+    lbl_register.place(x=132, y=170)
     window.update()
     # Processing
 
@@ -115,12 +113,8 @@ def registration():
         for (x, y, w, h) in faces:
             cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
             count += 1
-            cv2.imwrite('face/user.' + str(len(lengthNames)) + '.' + str(count) + '.jpg', gray[y:y + h, x:x + w])
-        """cv2.imshow('image', img)
-        k = cv2.waitKey(100) & 0xff
-        if k == 50:
-            break
-        el"""
+            cv2.imwrite('face/user.' + str(len(lengthNames)-1) + '.' + str(count) + '.jpg', gray[y:y + h, x:x + w])
+
         if count >= 30:
             break
 
@@ -128,36 +122,50 @@ def registration():
     global lbl_registered
     lbl_registered = tk.Label(window, text="You can relax now. \n We`re adding you into the database",
                                   font=("Arial", 18), bg="white")
-    lbl_registered.place(x=220, y=250)
+    lbl_registered.place(x=137, y=170)
     window.update()
     training()
 
 def signup():
     btn_login.destroy()
     btn_signup.destroy()
-    global id_form, btn_form
-    id_form = tk.Entry(window)
-    id_form.place(x=280, y=200)
-    btn_form = tk.Button(window, text = "Continue", command=registration)
-    btn_form.place(x=280, y=230)
+    global id_form, btn_form, lbl_name
+
+    btn_menu = tk.Button(window, text="MENU")
+
+
+    lbl_name = tk.Label(window, text="Name:", font=("Arial", 10), bg='#3a5dde')
+    lbl_name.place(x=210, y=170)
+
+
+    id_form = tk.Entry(window, width=24)
+    id_form.place(x=264, y=170)
+
+
+    btn_form = tk.Button(window, image=img_reg, bd=0, command=registration)
+    btn_form.place(x=210, y=200)
 
 if __name__ == '__main__':
     # Set up GUI
     window = tk.Tk()  # Makes main window
     window.wm_title("FACE ID")
     window.resizable(height=False, width=False)
-    window.geometry("800x600")
-    window.config(background="#FFFFFF")
+    window.geometry("600x450")
 
     global btn_login, btn_signup
     names = ["Unknown"]
+    img_reg = tk.PhotoImage(file="Images/reg.png")
+    img_bg = tk.PhotoImage(file="Images/bg.gif")
+    background_label = tk.Label(window, image=img_bg)
+    background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
+    img_login = tk.PhotoImage(file="Images/login.png")
+    btn_login = tk.Button(window, image=img_login, bd=0, command=login)
+    btn_login.place(x=210, y=150)
 
-    btn_login = tk.Button(window, text="LOGIN", command=login)
-    btn_login.place(x=280, y=150)
+    img_signup = tk.PhotoImage(file="Images/signup.png")
+    btn_signup = tk.Button(window, image=img_signup, bd=0, command=signup)
+    btn_signup.place(x=210, y=200)
 
-    btn_signup = tk.Button(window, text="SIGNUP", command=signup)
-    btn_signup.place(x=280, y=180)
-
-
+    
     window.mainloop()

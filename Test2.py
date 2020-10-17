@@ -31,3 +31,14 @@ class Video():
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
         lmain.after(10, self.show_frame)
+
+if __name__ == '__main__':
+
+    window = tk.Tk()  # Makes main window
+    window.wm_title("FACE ID")
+    window.resizable(height=False, width=False)
+    window.geometry("800x600")
+    window.config(background="#FFFFFF")
+    regis = Video(window)
+    regis.get()
+    window.mainloop()

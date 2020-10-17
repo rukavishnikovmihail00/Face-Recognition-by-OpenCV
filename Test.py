@@ -16,11 +16,22 @@ imageFrame.grid(row=0, column=0, padx=10, pady=2)
 lmain = tk.Label(imageFrame)
 lmain.grid(row=0, column=0)
 cap = cv2.VideoCapture(0)
+faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml");
 
 def show_frame():
     _, frame = cap.read()
     frame = cv2.flip(frame, 1)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    faces = faceCascade.detectMultiScale(
+        cv2image,
+        scaleFactor=1.2,
+        minNeighbors=5,
+        minSize=(20, 20),
+    )
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(cv2image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
     img = Image.fromarray(cv2image)
     imgtk = ImageTk.PhotoImage(image=img)
     lmain.imgtk = imgtk
